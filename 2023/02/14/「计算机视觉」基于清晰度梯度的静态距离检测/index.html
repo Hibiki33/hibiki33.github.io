@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Wjj">
+
+
+
+
+
+<title>「计算机视觉」基于清晰度梯度的静态距离检测 | Unpolished Blog</title>
+
+
+
+    <link rel="icon" href="/Hestia.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Unpolished Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Unpolished Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    var tocbot_timer;
+    var DEPTH_MAX = 6; // 为 6 时展开所有
+    var tocbot_default_config = {
+        tocSelector: '.tocbot-list',
+        contentSelector: '.post-content',
+        headingSelector: 'h1, h2, h3, h4, h5',
+        orderedList: false,
+        scrollSmooth: true,
+        onClick: extend_click,
+    };
+
+    function extend_click() {
+        clearTimeout(tocbot_timer);
+        tocbot_timer = setTimeout(function() {
+            tocbot.refresh(obj_merge(tocbot_default_config, {
+                hasInnerContainers: true
+            }));
+        }, 420); // 这个值是由 tocbot 源码里定义的 scrollSmoothDuration 得来的
+    }
+
+    document.ready(function() {
+        tocbot.init(obj_merge(tocbot_default_config, {
+            collapseDepth: 1
+        }));
+    });
+
+    function expand_toc() {
+        var b = document.querySelector('.tocbot-toc-expand');
+        var expanded = b.getAttribute('data-expanded');
+        expanded ? b.removeAttribute('data-expanded') : b.setAttribute('data-expanded', true);
+        tocbot.refresh(obj_merge(tocbot_default_config, {
+            collapseDepth: expanded ? 1 : DEPTH_MAX
+        }));
+        b.innerText = expanded ? 'Expand all' : 'Collapse all';
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function obj_merge(target, source) {
+        for (var item in source) {
+            if (source.hasOwnProperty(item)) {
+                target[item] = source[item];
+            }
+        }
+        return target;
+    }
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">「计算机视觉」基于清晰度梯度的静态距离检测</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">Wjj</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">February 14, 2023&nbsp;&nbsp;0:00:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/Computer-Vision/">Computer Vision</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="实验原理">实验原理</h1>
+<p>用 <code>Laplacian</code> 算子或者
+<code>Scharr</code>算子可以对图像或者图像的某一块区域进行清晰度的量化；此外，物体相对于镜头距离和镜头的最清晰成像焦距有唯一的对应数值。因此对于同一块区域的图像，焦距和清晰度的关系是一个有峰值的光滑曲线。</p>
+<p>对于同一块区域，将相机的焦距由小到大进行多次采样，得到该区域焦距-清晰度的一组对应数值，从而判断峰值所在区间，继而转换成距离进行测算。通过对这组图像的每个小块进行该操作，可以得到一处景象完整的深度图。</p>
+<h1 id="研究过程">研究过程</h1>
+<h2 id="原理阶段">原理阶段</h2>
+<p>通过一定手段对相机进行了固定，光圈也做了相应调整，选取有复杂纹理的图像进行了实验。</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/初步结果.png" alt="初步结果">
+<figcaption aria-hidden="true">初步结果</figcaption>
+</figure>
+</center>
+<p>右三已具有初步的深度特征，但是灰度图中的噪点仍然存在。在研究的第三阶段，通过对一定范围内的梯度值取众数的方式，试图消除噪点，取得了不错的效果；通过减小图像尺寸的方式，以获得更直观的视觉效果。此外，为了进一步优化，我采用了高斯模糊的方式取代直接取平均值的方法，深度图中轮廓的失真减少；最后通过归一化处理，增大深度图的颜色差异</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/三次优化.png" alt="三次优化">
+<figcaption aria-hidden="true">三次优化</figcaption>
+</figure>
+</center>
+<p>与此同时，我还对生成立体的深度图像做了尝试，下图是利用法线贴图和置换贴图对深度的灰度图进行转换的结果。</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/立体尝试.png" alt="立体尝试">
+<figcaption aria-hidden="true">立体尝试</figcaption>
+</figure>
+</center>
+<h2 id="优化阶段">优化阶段</h2>
+<p>优化集中在处理异常的微小色块上。我通过对于颜色范围的划分提取相应颜色（灰度）的掩膜。再通过膨胀算法消去异常色块，最后通过图像侵蚀和图层覆盖将处理后的掩膜重新组成深度图像。效果对比如下。</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/膨胀和侵蚀优化.png" alt="膨胀和侵蚀优化">
+<figcaption aria-hidden="true">膨胀和侵蚀优化</figcaption>
+</figure>
+</center>
+<p>我采用了 <em>SIGGRAPH.2006</em> 的一篇论文 <em>Real-Time Video
+Abstraction</em>
+的部分方法，对于灰度图像进行滤波的处理，优化了对于深度图色块边缘的失真问题。优化后，在一些错误深度值得以被侵蚀掉的前提下，获得了比较好的效果。</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/预测和滤波优化.png" alt="预测和滤波优化">
+<figcaption aria-hidden="true">预测和滤波优化</figcaption>
+</figure>
+</center>
+<p>基于清晰度梯度的静态距离检测在5米以内的景物下取得了不错的效果：经过图像处理后，生成了比较好的深度图。在5米以外的景物下，也取得了符合规律的图样。部分实验结果如下。</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/效果对比图.png" alt="效果对比图">
+<figcaption aria-hidden="true">效果对比图</figcaption>
+</figure>
+</center>
+<h2 id="自动控制">自动控制</h2>
+<p>除此以外，用2自由度云台配合开发板，搭建了自动采样装置；用跟焦器和舵机，实现焦距的连续控制。但是采样过程中的机械抖动一直没有解决，导致自动成像的图片组质量远不如手动，而且这种采样异常也超出了我能做到的图像自动修正能力，从外设角度想不到好的解决办法。</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/自动控制装置.png" alt="自动控制装置">
+<figcaption aria-hidden="true">自动控制装置</figcaption>
+</figure>
+</center>
+<p>由于上文所述的外置舵机抖动问题，我对摄像头参数的内部设置进行了一定的研究，并且成功调用了电脑内置的摄像头以及通过USB接口与电脑连接的外置摄像头，对于Android手机的摄像头调用也取得了成功，可以通过电脑USB连接实现光圈、焦距等参数的设置，以及视频录制和图像拍摄的控制。但是由于单反相机的封装程度很高，在对内存卡和数据接口进行了一系列尝试之后，我放弃了对单反相机的自动控制。</p>
+<h1 id="未来展望">未来展望</h1>
+<p>其实我做的这个距离检测对各种条件的要求都挺高的，物体本身纹理对此也有一定的限制。而且最后的效果也只能说堪堪能用。</p>
+<p>对于单目成像，去年有一篇论文 <em>Neural Window Fully-connected CRFs
+for Monocular Depth Estimation(NeW-CRFs)</em>
+实现了非常不错的效果。这项成果基于条件随机场，聚合观测信息，如颜色、纹理和位置等，利用这些信息来建立能量函数，迭代优化能量函数得到最终深度预测值。通过神经窗口全连接条件随机场（Neural
+Window Fully-connected
+CRFs），构建了一个bottom-up-top-down的网络，做到了高精度的单目深度估计。缺点是对于较复杂的几何场景的适应能力弱。</p>
+<center>
+<figure>
+<img src="/2023/02/14/%E3%80%8C%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89%E3%80%8D%E5%9F%BA%E4%BA%8E%E6%B8%85%E6%99%B0%E5%BA%A6%E6%A2%AF%E5%BA%A6%E7%9A%84%E9%9D%99%E6%80%81%E8%B7%9D%E7%A6%BB%E6%A3%80%E6%B5%8B/NewCRFs.png" alt="NewCRFs">
+<figcaption aria-hidden="true">NewCRFs</figcaption>
+</figure>
+</center>
+<p>未来更多的研究应该都会往深度学习上走，单目视觉相对于多目在立体成像上有先天劣势，本实验仅作为一次单目立体视觉的尝试。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>Wjj</span>
+                    </p>
+                
+                
+                
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/OpenCV/"># OpenCV</a>
+                    
+                        <a href="/tags/Python/"># Python</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2023/02/13/%E3%80%8C%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E3%80%8D%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/">「数据结构」前置知识</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+
+    <div id="gitalk-container"></div>
+    <link rel="stylesheet" href="//unpkg.com/gitalk/dist/gitalk.css">
+<script src="//unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+      var gitalk = new Gitalk({
+        clientID: 'df7215c51759aa7e5771',
+        clientSecret: '171187b08c3bd07a48843ef27330a99186537fcc',
+        repo: 'blog',
+        owner: 'Hibiki33',
+        admin: 'Hibiki33',
+        id: md5(location.pathname),      
+        labels: 'Gitalk'.split(',').filter(l => l),
+        perPage: 10,
+        pagerDirection: 'last',
+        createIssueManually: true,
+        distractionFreeMode: false
+      })
+      gitalk.render('gitalk-container')
+</script>
+
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Wjj | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
